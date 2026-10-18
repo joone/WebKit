@@ -41,7 +41,8 @@ my @args = ();
 if (!$preprocessor) {
     if ($Config::Config{"osname"} eq "MSWin32" || $Config::Config{"osname"} eq "msys") {
         $preprocessor = $ENV{CC} || "cl";
-        push(@args, qw(/nologo /EP /TP /C));
+        # Use dash-style options; MSYS Perl rewrites slash-style ones as POSIX paths.
+        push(@args, qw(-nologo -EP -TP -C));
     } else {
         $preprocessor = $ENV{CC} || (-x "/usr/bin/clang" ? "/usr/bin/clang" : "/usr/bin/gcc");
         push(@args, qw(-E -P -x c++ -C -ffreestanding));
@@ -68,9 +69,10 @@ if ($Config{osname} eq "cygwin") {
         @preprocessorAndFlags = split(' ', $preprocessor);
     } else {
         $preprocessor =~ /"(.*)"/;
-        chomp(my $preprocessor = `cygpath -u '$1'`) if (defined $1);
+        chomp($preprocessor = `cygpath -u '$1'`) if (defined $1);
         chomp($inputPath = `cygpath -w '$inputPath'`);
-        @preprocessorAndFlags = ($preprocessor, "/nologo", "/EP", "/TP", "/C");
+        @preprocessorAndFlags = ($preprocessor, "-nologo", "-EP", "-TP", "-C");
+        @args = ();
     }
 
     # This call can fail if Windows rebases cygwin, so retry a few times until it succeeds.
